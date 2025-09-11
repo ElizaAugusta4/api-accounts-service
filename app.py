@@ -31,3 +31,10 @@ def get_account(account_id: int, db: Session = Depends(get_db)):
     if not account:
         raise HTTPException(status_code=404, detail="Conta não encontrada")
     return account
+
+@app.get("/accounts/{account_id}/transactions")
+def get_account_transactions(account_id: int):
+    return [
+        {"id": 1, "account_id": account_id, "type": "INCOME", "amount": 100.0, "description": "Teste", "category": "Salário"},
+        {"id": 2, "account_id": account_id, "type": "EXPENSE", "amount": 50.0, "description": "Teste", "category": "Mercado"}
+    ]
