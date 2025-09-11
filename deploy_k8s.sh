@@ -1,22 +1,43 @@
 #!/bin/bash
-set -e
 
-# Instala kubectl se não existir
-if ! command -v kubectl &> /dev/null; then
-  echo "Instalando kubectl..."
-  curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-  chmod +x ./kubectl
-  sudo mv ./kubectl /usr/local/bin/kubectl
+# Instala Docker
+if ! command -v docker &> /dev/null; then
+  echo "Instalando Docker..."
+  sudo yum install -y docker
+  sudo systemctl start docker
+  sudo systemctl enable docker
 fi
 
-# Configura kubeconfig
-if [ -z "$KUBE_CONFIG_DATA" ]; then
-  echo "KUBE_CONFIG_DATA não definido!"
-  exit 1
+# Instala kubeadm, kubelet e kubectl
+if ! command -v kubeadm &> /dev/null; then
+  echo "Configurando repositório Kubernetes..."
+  cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+  sudo setenforce 0 || true
+  sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+  sudo systemctl enable kubelet
+  sudo systemctl start kubelet
 fi
 
-echo "$KUBE_CONFIG_DATA" | base64 --decode > kubeconfig
-export KUBECONFIG=$(pwd)/kubeconfig
+# Inicializa o cluster Kubernetes
+if [ ! -f /etc/kubernetes/admin.conf ]; then
+  echo "Inicializando cluster Kubernetes..."
+  sudo kubeadm init --pod-network-cidr=10.244.0.0/16 || true
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+fi
+export KUBECONFIG=$HOME/.kube/config
+
+# Instala rede Flannel
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml || true
 
 # Aplica todos os manifests do diretório k8s
 kubectl apply -f K8s-manifests/
