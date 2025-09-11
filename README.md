@@ -50,8 +50,6 @@ docker run -e MYSQL_HOST=... -e MYSQL_USER=... -e MYSQL_PASSWORD=... -e MYSQL_DA
 
 ## Testes
 
-Os testes estão em `test_app.py` e cobrem as principais rotas da API. Para rodar:
-
 ```bash
 pytest test_app.py
 ```
