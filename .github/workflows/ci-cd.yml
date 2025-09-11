@@ -47,6 +47,7 @@ jobs:
   deploy-k8s:
     runs-on: ubuntu-latest
     needs: build-and-push
+    environment: K8S-SECRETS
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
