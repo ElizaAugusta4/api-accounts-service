@@ -19,9 +19,20 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: KUBE_CONFIG_DATA
           script: |
             rm -rf api-accounts-service
             git clone https://github.com/ElizaAugusta4/api-accounts-service.git
             cd api-accounts-service
+            # Instala kubectl
+            if ! command -v kubectl &> /dev/null; then
+              echo "Instalando kubectl..."
+              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+              chmod +x kubectl
+              sudo mv kubectl /usr/local/bin/
+            fi
+            # Configura kubeconfig
+            echo "$KUBE_CONFIG_DATA" | base64 --decode > kubeconfig
+            export KUBECONFIG=$(pwd)/kubeconfig
             chmod +x ./deploy_k8s.sh
             ./deploy_k8s.sh
