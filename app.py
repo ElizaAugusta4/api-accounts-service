@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from typing import List
 from sqlalchemy.orm import Session
-from . import models, schemas
-from .database import get_db, engine
+import models, schemas
+from database import get_db, engine
 
 app = FastAPI(title="Accounts Service", version="1.0.0")
 
