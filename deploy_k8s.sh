@@ -24,7 +24,7 @@ newgrp docker
 
 # Cria cluster local com kind
 echo "===> Criando cluster local com Kind..."
-sudo kind create cluster --name PROD-FINANCE --wait 60s
+sudo kind create cluster --name prod-finance --wait 60s
 
 # Configura KUBECONFIG
 echo "===> Configurando KUBECONFIG..."
