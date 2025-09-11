@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            yum install -y git
+            sudo yum install -y git
             git clone https://github.com/ElizaAugusta4/api-accounts-service.git
             cd api-accounts-service
             chmod +x ./deploy_k8s.sh
