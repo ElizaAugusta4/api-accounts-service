@@ -17,9 +17,14 @@ if ! command -v kind &> /dev/null; then
   sudo mv ./kind /usr/local/bin/kind
 fi
 
+
+# Garante permissão para usar Docker
+sudo usermod -aG docker $USER
+newgrp docker
+
 # Cria cluster local com kind
 echo "===> Criando cluster local com Kind..."
-kind create cluster --name ci-cluster --wait 60s
+kind create cluster --name PROD-FINANCE --wait 60s
 
 # Configura KUBECONFIG
 echo "===> Configurando KUBECONFIG..."
