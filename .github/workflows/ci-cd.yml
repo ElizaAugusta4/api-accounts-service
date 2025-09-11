@@ -41,7 +41,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/accounts-service:latest
+              docker push ${{ secrets.DOCKER_USERNAME }}/accounts-service:latest
 
   deploy-k8s:
     runs-on: ubuntu-latest
