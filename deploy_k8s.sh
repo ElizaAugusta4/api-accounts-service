@@ -1,8 +1,6 @@
 
 #!/bin/bash
 set -euo pipefail
-KUBECONFIG_FILE="$HOME/.kube/config"
-export KUBECONFIG=$KUBECONFIG_FILE
 
 if ! command -v kubectl &> /dev/null; then
   echo "Instalando kubectl..."
@@ -31,8 +29,16 @@ else
   kind create cluster --name prod-finance --wait 60s
 fi
 
-kubectl config use-context kind-prod-finance
+# Caminho para salvar o kubeconfig específico do Kind
+mkdir -p $HOME/.kube
+KUBECONFIG_FILE="$HOME/.kube/config-kind-prod-finance"
+export KUBECONFIG="$KUBECONFIG_FILE"
 
+# Gera ou sobrescreve o kubeconfig do cluster
+kind get kubeconfig --name prod-finance > "$KUBECONFIG_FILE"
+
+# Agora sim define o contexto
+kubectl config use-context kind-prod-finance
 
 echo \"===> Aplicando manifests do diretório K8s-manifests/...\"
 kubectl apply -f K8s-manifests/
