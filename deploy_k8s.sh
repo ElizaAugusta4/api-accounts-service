@@ -1,4 +1,3 @@
-
 #!/bin/bash
 set -euo pipefail
 
@@ -8,7 +7,6 @@ if ! command -v kubectl &> /dev/null; then
   chmod +x kubectl
   sudo mv kubectl /usr/local/bin/
 fi
-
 
 if ! command -v kind &> /dev/null; then
   echo "Instalando kind..."
@@ -29,15 +27,12 @@ else
   kind create cluster --name prod-finance --wait 60s
 fi
 
-# Caminho para salvar o kubeconfig específico do Kind
 mkdir -p $HOME/.kube
 KUBECONFIG_FILE="$HOME/.kube/config-kind-prod-finance"
 export KUBECONFIG="$KUBECONFIG_FILE"
 
-# Gera ou sobrescreve o kubeconfig do cluster
 kind get kubeconfig --name prod-finance > "$KUBECONFIG_FILE"
 
-# Agora sim define o contexto
 kubectl config use-context kind-prod-finance
 
 echo \"===> Aplicando manifests do diretório K8s-manifests/...\"
@@ -49,11 +44,15 @@ for DEPLOY in accounts-service transactions-service balance-service; do
   kubectl rollout status deployment/$DEPLOY --timeout=120s
 done
 
-echo \"===> Fazendo health check dos serviços...\"
+
+echo "===> Aguardando todos os pods ficarem prontos..."
+kubectl wait --for=condition=Ready pod --all --timeout=120s
+
+echo "===> Fazendo health check dos serviços..."
 for SVC in accounts-service transactions-service balance-service; do
   CLUSTER_IP=$(kubectl get svc $SVC -o jsonpath='{.spec.clusterIP}')
   PORT=$(kubectl get svc $SVC -o jsonpath='{.spec.ports[0].port}')
-  echo \"----> $SVC acessível em $CLUSTER_IP:$PORT (dentro do cluster)\"
+  echo "----> $SVC acessível em $CLUSTER_IP:$PORT (dentro do cluster)"
 done
 
 echo \"✅ Deploy finalizado com sucesso!\"
