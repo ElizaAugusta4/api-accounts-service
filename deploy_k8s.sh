@@ -20,12 +20,17 @@ sudo usermod -aG docker $USER
 newgrp docker
 
 echo "===> Verificando se o cluster local Kind já existe..."
+
 if kind get clusters | grep -q "^prod-finance$"; then
   echo "Cluster 'prod-finance' já existe. Pulando criação."
 else
   echo "Criando cluster local com Kind..."
   sudo kind create cluster --name prod-finance --wait 60s
 fi
+
+# Configura KUBECONFIG e contexto do Kind
+export KUBECONFIG="$(kind get kubeconfig-path --name prod-finance 2>/dev/null || kind get kubeconfig --name prod-finance)"
+kubectl config use-context kind-prod-finance
 
 echo \"===> Aplicando manifests do diretório K8s-manifests/...\"
 kubectl apply -f K8s-manifests/
