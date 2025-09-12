@@ -24,7 +24,7 @@ newgrp docker
 
 echo "===> Verificando se o cluster local Kind já existe..."
 
-if kind get clusters | grep -q "^prod-finance$"; then
+if kind get clusters | grep -q "prod-finance$"; then
   echo "Cluster 'prod-finance' já existe. Pulando criação."
 else
   echo "Criando cluster local com Kind..."
