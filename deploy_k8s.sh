@@ -24,16 +24,15 @@ newgrp docker
 
 echo "===> Verificando se o cluster local Kind já existe..."
 
-if kind get clusters | grep -q "prod-finance$"; then
+if kind get clusters | grep -q "^prod-finance$"; then
   echo "Cluster 'prod-finance' já existe. Pulando criação."
 else
   echo "Criando cluster local com Kind..."
-  sudo kind create cluster --name prod-finance --wait 60s
+  kind create cluster --name prod-finance --wait 60s
 fi
 
-kubectl config get-contexts
+kubectl config use-context kind-prod-finance
 
-sudo kubectl config use-context prod-finance
 
 echo \"===> Aplicando manifests do diretório K8s-manifests/...\"
 kubectl apply -f K8s-manifests/
