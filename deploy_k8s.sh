@@ -31,7 +31,7 @@ else
   sudo kind create cluster --name prod-finance --wait 60s
 fi
 
-kubectl config use-context prod-finance
+sudo kubectl config use-context prod-finance
 
 echo \"===> Aplicando manifests do diretório K8s-manifests/...\"
 kubectl apply -f K8s-manifests/
