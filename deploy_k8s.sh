@@ -1,8 +1,7 @@
-
 #!/bin/bash
 set -euo pipefail
-unset KUBECONFIG
 
+# Instala kubectl se não existir
 if ! command -v kubectl &> /dev/null; then
   echo "Instalando kubectl..."
   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -10,7 +9,7 @@ if ! command -v kubectl &> /dev/null; then
   sudo mv kubectl /usr/local/bin/
 fi
 
-
+# Instala kind se não existir
 if ! command -v kind &> /dev/null; then
   echo "Instalando kind..."
   curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64
@@ -18,36 +17,40 @@ if ! command -v kind &> /dev/null; then
   sudo mv ./kind /usr/local/bin/kind
 fi
 
-sudo usermod -aG docker $USER
-newgrp docker
-
+# Garante que o usuário pode usar docker
+sudo usermod -aG docker $USER || true
+newgrp docker <<EONG
 echo "===> Verificando se o cluster local Kind já existe..."
 
 if kind get clusters | grep -q "^prod-finance$"; then
   echo "Cluster 'prod-finance' já existe. Pulando criação."
 else
   echo "Criando cluster local com Kind..."
-  sudo kind create cluster --name prod-finance --wait 60s
+  kind create cluster --name prod-finance --wait 60s
 fi
 
 # Configura KUBECONFIG e contexto do Kind
-export KUBECONFIG="$(kind get kubeconfig-path --name prod-finance 2>/dev/null || kind get kubeconfig --name prod-finance)"
+mkdir -p $HOME/.kube
+KUBECONFIG_FILE="$HOME/.kube/config-kind-prod-finance"
+kind get kubeconfig --name prod-finance > "$KUBECONFIG_FILE"
+export KUBECONFIG="$KUBECONFIG_FILE"
 kubectl config use-context kind-prod-finance
 
-echo \"===> Aplicando manifests do diretório K8s-manifests/...\"
+echo "===> Aplicando manifests do diretório K8s-manifests/..."
 kubectl apply -f K8s-manifests/
 
-echo \"===> Aguardando rollout dos deployments...\"
+echo "===> Aguardando rollout dos deployments..."
 for DEPLOY in accounts-service transactions-service balance-service; do
-  echo \"----> Validando $DEPLOY\"
+  echo "----> Validando $DEPLOY"
   kubectl rollout status deployment/$DEPLOY --timeout=120s
 done
 
-echo \"===> Fazendo health check dos serviços...\"
+echo "===> Fazendo health check dos serviços..."
 for SVC in accounts-service transactions-service balance-service; do
   CLUSTER_IP=$(kubectl get svc $SVC -o jsonpath='{.spec.clusterIP}')
   PORT=$(kubectl get svc $SVC -o jsonpath='{.spec.ports[0].port}')
-  echo \"----> $SVC acessível em $CLUSTER_IP:$PORT (dentro do cluster)\"
+  echo "----> $SVC acessível em $CLUSTER_IP:$PORT (dentro do cluster)"
 done
 
-echo \"✅ Deploy finalizado com sucesso!\"
+echo "✅ Deploy finalizado com sucesso!"
+EONG
