@@ -1,5 +1,7 @@
+
 #!/bin/bash
 set -euo pipefail
+unset KUBECONFIG
 
 if ! command -v kubectl &> /dev/null; then
   echo "Instalando kubectl..."
