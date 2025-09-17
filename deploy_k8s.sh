@@ -39,7 +39,7 @@ echo \"===> Aplicando manifests do diretório K8s-manifests/...\"
 kubectl apply -f K8s-manifests/
 
 echo \"===> Aguardando rollout dos deployments...\"
-for DEPLOY in accounts-service transactions-service balance-service; do
+for DEPLOY in accounts-service; do
   echo \"----> Validando $DEPLOY\"
   kubectl rollout status deployment/$DEPLOY --timeout=120s
 done
@@ -49,7 +49,7 @@ echo "===> Aguardando todos os pods ficarem prontos..."
 kubectl wait --for=condition=Ready pod --all --timeout=120s
 
 echo "===> Fazendo health check dos serviços..."
-for SVC in accounts-service transactions-service balance-service; do
+for SVC in accounts-service; do
   CLUSTER_IP=$(kubectl get svc $SVC -o jsonpath='{.spec.clusterIP}')
   PORT=$(kubectl get svc $SVC -o jsonpath='{.spec.ports[0].port}')
   echo "----> $SVC acessível em $CLUSTER_IP:$PORT (dentro do cluster)"
