@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: accounts-service
-          image: <DOCKER_USERNAME>/accounts-service:latest
+          image: elizaaugusta/accounts-service:latest
           ports:
             - containerPort: 8000
           env:
